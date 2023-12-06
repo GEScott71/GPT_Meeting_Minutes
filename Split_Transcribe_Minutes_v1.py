@@ -9,7 +9,7 @@
 # Also, I've added to additional functions beyond the tutorial scope:
 #   - Participants
 #   - Mentions of items of interest specified by the user
-# Last, it combines them into a single text file.
+# Last, it combines them into a single text file
 # Input: mp3 audio file
 # Output: 2 text files:  transcription.txt and minutes.txt
 
