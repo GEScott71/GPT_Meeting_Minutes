@@ -19,24 +19,17 @@ import os
 import openai
 from openai import OpenAI
 import time
+import json
+from datetime import date
 
-openai.api_key = open("key.txt", "r").read().strip('\n')
+openai.api_key = open(r"C:\Users\GESco\Documents\key.txt", "r").read().strip('\n')
 client = OpenAI(
     api_key=openai.api_key
 )
 
 
-def split_mp3(file_path, segment_size_mb=25):
-    """
-    Splits an MP3 file into multiple segments if its size is greater than the specified segment size.
-
-    :param file_path: Path to the MP3 file.
-    :param segment_size_mb: Maximum size of each segment in MB. Default is 25MB.
-    :return: A list of paths to the generated segments.
-    """
-    # Check if the file exists
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"The file {file_path} does not exist.")
+def split_mp3(file_path, segment_size_mb=25): # Splits an MP3 file into multiple segments if its size is greater than
+    # the specified segment size, and returns a list of paths to the generated segments.
 
     # Calculate the file size in MB
     file_size_mb = os.path.getsize(file_path) / (1024 * 1024)
@@ -87,7 +80,7 @@ def transcribe_audio_list(segments):
 
 def abstract_summary_extraction(transcription):
     response = client.chat.completions.create(
-        model="gpt-4-1106-preview",
+        model = gpt_model,
         temperature=0,
         messages=[
             {
@@ -101,13 +94,13 @@ def abstract_summary_extraction(transcription):
         ]
     )
     # return response['choices'][0]['message']['content']  # Format from old API
-    response = response.choices[0].message.content
+    # response = response.choices[0].message.content
     return response
 
 
 def key_points_extraction(transcription):
     response = client.chat.completions.create(
-        model="gpt-4-1106-preview",
+        model=gpt_model,
         temperature=0,
         messages=[
             {
@@ -126,7 +119,7 @@ def key_points_extraction(transcription):
 
 def action_item_extraction(transcription):
     response = client.chat.completions.create(
-        model="gpt-4-1106-preview",
+        model=gpt_model,
         temperature=0,
         messages=[
             {
@@ -145,7 +138,7 @@ def action_item_extraction(transcription):
 
 def participant_list(transcription):
     response = client.chat.completions.create(
-        model="gpt-4-1106-preview",
+        model=gpt_model,
         temperature=0,
         messages=[
             {
@@ -166,10 +159,10 @@ def ioi_extraction(transcription):  # Items of interest
     with open('ioi.txt', 'r') as file:  # Read items of interest from file
         ioi = file.read()
     ioi = ioi.replace('\n', ', ').strip(', ')  # Replace line breaks with commas
-    content = "You are an AI expert in analyzing company earnings calls and extracting key items of interest specified by the user.  Please carefully review the entire text and identify if any of the following terms are mentioned in the transcript of this earnings call.  Start by breaking down the transcript into smaller chunks of less than 10,000 characters each.  Carefully search each chunk for the key terms of interest specified.  If any of the terms are mentioned, do 2 things:  1) repeat exactly exactly what was said about that term, and 2)explain what was meant by the discussion about that term.  Provide the output in an organized way.  When complete, review the transcription again to ensure none of the specified terms were missed.  Here is the list of terms: "
+    content = "You are a helpful and very talented AI trained to search and analyze meeting transcripts.  Carefully search the transcript provided for the following terms.  For each of the terms found, do 2 things: 1) repeat the quote where the term was used, and 2)explain your expert interpretation of what was meant by the discussion about that term.  Provide the output in an organized way.  When complete, review the transcription again to ensure none of the specified terms were missed.  Here is the list of terms: "
     content += ioi
     response = client.chat.completions.create(
-        model="gpt-4-1106-preview",
+        model = gpt_model,
         temperature=0,
         messages=[
             {
@@ -182,13 +175,13 @@ def ioi_extraction(transcription):  # Items of interest
             }
         ]
     )
-    response = response.choices[0].message.content
+    # response = response.choices[0].message.content
     return response
 
 
 def sentiment_analysis(transcription):
     response = client.chat.completions.create(
-        model="gpt-4-1106-preview",
+        model=gpt_model,
         temperature=0,
         messages=[
             {
@@ -207,28 +200,38 @@ def sentiment_analysis(transcription):
 
 if __name__ == '__main__':
 
+    today = str(date.today())
+    file_prefix = "unp_Q3_2023_earnings_call"  # filename without extension to use for loading and writing various files
+
+    gpt_model = "gpt-4-1106-preview"
+    # gpt_model = "gpt-4-32k"
+    # gpt_model = "gpt-3.5-turbo-16k-0613"
+
     # Segment audio file into smaller chunks if needed
     t0 = time.time()
-    segments = split_mp3('FordQ3_f231026_1700_14254_archive.mp3')  # Split mp3 into segments small enough to transcribe
+    # segments = split_mp3('Data/' + file_prefix +'.mp3')  # Split mp3 into segments small enough to transcribe
     t1 = time.time()
 
     # Transcribe audio
-    transcription = transcribe_audio_list(segments)  # Transcribe each segment and return single combined transcription
+    # transcription = transcribe_audio_list(segments)  # Transcribe each segment and return single combined transcription
     t2 = time.time()
 
-    with open(r'C:\Users\GESco\Documents\Coding\GPT_Meeting_Minutes\Data\Q3_ford_transcription_3-Dec-2023.txt', 'w') as file:  # Save transcription as file
-        file.write(transcription)
+    # with open(r'Data/' + file_prefix + '_transcript_' + today + '.txt',
+    #           'w') as file:  # Save transcription as file
+    #     file.write(transcription)
 
-    # with open(r'C:\Users\GESco\Documents\Coding\GPT_Meeting_Minutes\Data\Q3_ford_transcription_2-Dec-2023.txt',
-    #           'r') as file:  # Read transcription from file
-    #     transcription = file.read()
+    with open(r'Data/unp_Q3_2023_earnings_call_transcript_2023-12-23.txt',
+              'r') as file:  # Read transcription from file
+        transcription = file.read()
 
     print('\n *** Transcription ***\n')
     print(transcription)
     t3 = time.time()
 
     # Create sections of meeting minutes
-    summary = "\n Summary: \n" + abstract_summary_extraction(transcription)
+    summary_response = abstract_summary_extraction(transcription)
+    summary = "\n Summary: \n" + summary_response.choices[0].message.content
+    # summary = "\n Summary: \n" + abstract_summary_extraction(transcription)
     t4 = time.time()
 
     key_points = "\n\n Key Points \n" + key_points_extraction(transcription)
@@ -240,7 +243,9 @@ if __name__ == '__main__':
     participants = "\n\n Participants \n" + participant_list(transcription)
     t7 = time.time()
 
-    ioi_discussion = "\n\n Items of Interest \n" + ioi_extraction(transcription)
+    ioi_response = ioi_extraction(transcription)
+    ioi_discussion = "\n\n Items of Interest \n" + ioi_response.choices[0].message.content
+    # ioi_discussion = "\n\n Items of Interest \n" + ioi_extraction(transcription)
     t8 = time.time()
 
     sentiment = "\n\n Sentiment Analysis \n" + sentiment_analysis(transcription)
@@ -257,7 +262,7 @@ if __name__ == '__main__':
     print('\n *** Minutes: ***\n')
     print(minutes)
 
-    with open(r'C:\Users\GESco\Documents\Coding\GPT_Meeting_Minutes\Data\Q3_ford_minutes_3-Dec-2023.txt', 'w') as file:  # Save minutes
+    with open(r'Data/' + file_prefix + '_minutes_' + today + '.txt','w') as file:  # Save minutes
         file.write(minutes)
     t10 = time.time()
 
@@ -272,4 +277,7 @@ if __name__ == '__main__':
     print('sentiment time = ', t9 - t8)
     print('file time = ', t10 - t9)
     print('total time = ', t10 - t0)
+
+    print(json.dumps((summary_response.model_dump()), indent=2))
+    print(json.dumps((ioi_response.model_dump()), indent=2))
 
