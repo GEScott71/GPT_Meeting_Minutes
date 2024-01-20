@@ -1,5 +1,3 @@
-Locomotives
-Train Length
-Remote Control
-Distributed Power
-Energy Management
+Batteries
+Tesla
+Cybertruck
