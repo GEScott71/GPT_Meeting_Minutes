@@ -13,7 +13,7 @@
 # Input: mp3 audio file
 # Output: 2 text files:  transcription.txt and minutes.txt
 #
-# v3 updates:
+# 21-Jan-2024 updates:
 # - Removed timings, and added token tracking
 # - Changed to use single function for GPT API call, and moved various prompts outside of the API call function
 # - Changed to provide the transcript as a system message and the individual prompts as user mesages, and added each to message history
